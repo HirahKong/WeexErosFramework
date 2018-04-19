@@ -5,15 +5,15 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Looper;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.Toast;
 
 import com.benmu.framework.R;
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.manager.Manager;
-import com.benmu.widget.view.BMAlert;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.widget.view.BMGridDialog;
 import com.benmu.widget.view.BMLoding;
 
@@ -49,16 +49,16 @@ public class ModalManager extends Manager {
 
         public static void showLoading(Context context, final String message, boolean
                 canWatchOutsideTouch) {
-            if (context instanceof AbstractWeexActivity) {
-                final AbstractWeexActivity activity = (AbstractWeexActivity) context;
+            if (context instanceof AppCompatActivity&&context instanceof ISupportWeexActivity) {
+                final AppCompatActivity activity = (AppCompatActivity) context;
                 if (activity.isFinishing()) return;
                 if (Looper.myLooper() == Looper.getMainLooper()) {
-                    activity.showLoadingDialog(message);
+                    ((ISupportWeexActivity)activity).showLoadingDialog(message);
                 } else {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            activity.showLoadingDialog(message);
+                            ((ISupportWeexActivity)activity).showLoadingDialog(message);
                         }
                     });
                 }
@@ -66,16 +66,16 @@ public class ModalManager extends Manager {
         }
 
         public static void dismissLoading(Context context) {
-            if (context instanceof AbstractWeexActivity) {
-                final AbstractWeexActivity activity = (AbstractWeexActivity) context;
+            if (context instanceof AppCompatActivity&&context instanceof ISupportWeexActivity) {
+                final AppCompatActivity activity = (AppCompatActivity) context;
                 if (activity.isFinishing()) return;
-                activity.closeDialog();
+                ((ISupportWeexActivity)activity).closeDialog();
                 if (Looper.myLooper() == Looper.getMainLooper()) {
                 } else {
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            activity.closeDialog();
+                            ((ISupportWeexActivity)activity).closeDialog();
                         }
                     });
                 }

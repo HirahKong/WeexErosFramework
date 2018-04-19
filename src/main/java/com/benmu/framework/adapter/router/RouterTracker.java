@@ -3,6 +3,8 @@ package com.benmu.framework.adapter.router;
 import android.app.Activity;
 import android.util.Log;
 
+import com.benmu.framework.support.ISupportWeexActivity;
+
 import java.util.Stack;
 
 /**
@@ -250,8 +252,8 @@ public class RouterTracker {
 
 
     private static void notifyActivityRemove(Activity act,boolean force) {
-        if (act instanceof RouterTrackerListener) {
-            RouterTrackerListener routerTrackerListener = (RouterTrackerListener) act;
+        if (act instanceof ISupportWeexActivity) {
+            ISupportWeexActivity routerTrackerListener = (ISupportWeexActivity) act;
             routerTrackerListener.onDetach(act,force);
         } else {
             Log.e(TAG, act.getClass().getName() + "is unTrack");

@@ -22,7 +22,7 @@ import com.benmu.framework.utils.SharePreferenceUtil;
  * Created by Carry on 2017/8/25.
  */
 
-public class DebugActivity extends AbstractWeexActivity {
+public class DebugActivity extends SupportWeexActivity {
     private TextView tv_appversion;
     private TextView tv_jsverision;
     private CheckBox cb_inter, cb_hotrefresh;
@@ -56,7 +56,7 @@ public class DebugActivity extends AbstractWeexActivity {
         cb_inter.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharePreferenceUtil.setInterceptorActive(mAct, isChecked ? Constant
+                SharePreferenceUtil.setInterceptorActive(DebugActivity.this, isChecked ? Constant
                         .INTERCEPTOR_ACTIVE : Constant.INTERCEPTOR_DEACTIVE);
                 ManagerFactory.getManagerService(DispatchEventManager.class).getBus().post(new
                         Intent
@@ -77,7 +77,7 @@ public class DebugActivity extends AbstractWeexActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Log.e("DebugActivity", "onCheckedChanged -> " + isChecked);
-                SharePreferenceUtil.setHotRefreshSwitch(mAct, isChecked);
+                SharePreferenceUtil.setHotRefreshSwitch(DebugActivity.this, isChecked);
                 ManagerFactory.getManagerService(DispatchEventManager.class).getBus().post(new
                         Intent
                         (WXConstant.ACTION_INTERCEPTOR_SWTICH));

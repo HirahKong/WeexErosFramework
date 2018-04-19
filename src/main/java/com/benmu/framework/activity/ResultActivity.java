@@ -7,6 +7,7 @@ import com.benmu.framework.adapter.router.RouterTracker;
 import com.benmu.framework.constant.Constant;
 import com.benmu.framework.manager.impl.GlobalEventManager;
 import com.benmu.framework.model.NotificationBean;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.taobao.weex.WXSDKInstance;
 import java.io.Serializable;
 
@@ -31,8 +32,8 @@ public class ResultActivity extends Activity {
                     NotificationBean bean = (NotificationBean) serializable;
                     //发送事件
                     Activity activity = RouterTracker.peekActivity();
-                    if (activity instanceof AbstractWeexActivity) {
-                        WXSDKInstance wxsDkInstance = ((AbstractWeexActivity) activity)
+                    if (activity instanceof ISupportWeexActivity) {
+                        WXSDKInstance wxsDkInstance = ((ISupportWeexActivity) activity)
                                 .getWXSDkInstance();
                         GlobalEventManager.pushMessage(wxsDkInstance, com.benmu.framework.manager
                                 .impl.PushManager.getParams

@@ -5,11 +5,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
 import com.benmu.framework.BMWXEnvironment;
 import com.benmu.framework.R;
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.constant.Constant;
 import com.benmu.framework.manager.ManagerFactory;
 import com.benmu.framework.manager.impl.ModalManager;
@@ -17,6 +17,7 @@ import com.benmu.framework.manager.impl.ParseManager;
 import com.benmu.framework.model.CallPhoneBean;
 import com.benmu.framework.model.RouterModel;
 import com.benmu.framework.model.WebViewParamBean;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.taobao.weex.bridge.JSCallback;
 import com.taobao.weex.bridge.SimpleJSCallback;
 
@@ -92,9 +93,9 @@ public class DefaultRouterAdapter {
         if (backParams instanceof Map) {
             if (((Map) backParams).size() > 0) {
                 Activity activity = RouterTracker.peekActivity();
-                if (activity instanceof AbstractWeexActivity) {
+                if (activity instanceof ISupportWeexActivity) {
                     //设置back参数
-                    ((AbstractWeexActivity) activity).setRouterParam(routerModel);
+                    ((ISupportWeexActivity) activity).setRouterParam(routerModel);
                 }
             }
         }
@@ -105,23 +106,23 @@ public class DefaultRouterAdapter {
     public RouterModel getParams(Context context) {
         if (context == null) return null;
         Activity activity = RouterTracker.peekActivity();
-        if (activity instanceof AbstractWeexActivity) {
-            return ((AbstractWeexActivity) activity).getRouterParam();
+        if (activity instanceof ISupportWeexActivity) {
+            return ((ISupportWeexActivity) activity).getRouterParam();
         }
         return null;
     }
 
     public static boolean refresh(Context context) {
-        if (context instanceof AbstractWeexActivity) {
-            ((AbstractWeexActivity) context).refresh();
+        if (context instanceof ISupportWeexActivity) {
+            ((ISupportWeexActivity) context).refresh();
             return true;
         }
         return false;
     }
 
     public static boolean finish(Context context) {
-        if (context instanceof AbstractWeexActivity) {
-            ((AbstractWeexActivity) context).finish();
+        if (context instanceof AppCompatActivity) {
+            ((AppCompatActivity) context).finish();
             return true;
         }
         return false;

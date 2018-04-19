@@ -3,6 +3,7 @@ package com.benmu.framework.manager.impl.status;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
@@ -13,8 +14,8 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.benmu.framework.BMWXEnvironment;
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.model.RouterModel;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.framework.utils.BaseCommonUtil;
 
 /**
@@ -45,7 +46,7 @@ public class StatusBarManager {
         }
     }
 
-    public static void setHeaderBg(RouterModel router, AbstractWeexActivity activity) {
+    public static void setHeaderBg(RouterModel router, AppCompatActivity activity) {
         if (router == null) return;
         String defaultColor = BMWXEnvironment.mPlatformConfig.getPage().getNavBarColor();
         if (TextUtils.isEmpty(defaultColor)) {
@@ -57,7 +58,7 @@ public class StatusBarManager {
             //show nav
             if (isSupportTranslucent(activity)) {
                 //support
-                setStatusBarColor(activity, BaseCommonUtil.getHexColor(defaultColor), 0, activity
+                setStatusBarColor(activity, BaseCommonUtil.getHexColor(defaultColor), 0,((ISupportWeexActivity) activity)
                         .getRootView());
             } else {
                 //unSupport
@@ -67,7 +68,7 @@ public class StatusBarManager {
             //hide nav
             if (isSupportTranslucent(activity)) {
                 FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)
-                        activity.getRootView().getLayoutParams();
+                        ((ISupportWeexActivity) activity).getRootView().getLayoutParams();
                 if (layoutParams == null) {
                     layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams
                             .MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -76,13 +77,13 @@ public class StatusBarManager {
                 translucentStatusBar(activity);
             } else {
                 //不可透明 向上平移状态栏高度
-                View root = activity.getRootView();
+                View root = ((ISupportWeexActivity) activity).getRootView();
                 setOffset(activity, root, false);
             }
         }
     }
 
-    private static void translucentStatusBar(AbstractWeexActivity activity) {
+    private static void translucentStatusBar(AppCompatActivity activity) {
 
     }
 

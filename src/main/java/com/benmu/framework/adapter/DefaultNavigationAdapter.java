@@ -9,12 +9,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.benmu.framework.BMWXEnvironment;
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.adapter.router.RouterTracker;
 import com.benmu.framework.manager.ManagerFactory;
 import com.benmu.framework.manager.impl.ParseManager;
 import com.benmu.framework.model.BaseResultBean;
 import com.benmu.framework.model.NavigatorBarModel;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.framework.utils.BMHookGlide;
 import com.benmu.widget.utils.ColorUtils;
 import com.benmu.widget.view.BaseToolBar;
@@ -171,8 +171,8 @@ public class DefaultNavigationAdapter {
     private static BaseToolBar getToolBar() {
         Activity activity = RouterTracker.peekActivity();
         if (activity != null) {
-            if (activity instanceof AbstractWeexActivity) {
-                AbstractWeexActivity abs = (AbstractWeexActivity) activity;
+            if (activity instanceof ISupportWeexActivity) {
+                ISupportWeexActivity abs = (ISupportWeexActivity) activity;
                 return abs.getNavigationBar();
             }
         }

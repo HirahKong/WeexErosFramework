@@ -30,7 +30,7 @@ import com.benmu.framework.utils.BaseCommonUtil;
  * Created by Carry on 2017/8/25.
  */
 
-public class GlobalWebViewActivity extends AbstractWeexActivity {
+public class GlobalWebViewActivity extends SupportWeexActivity {
     private View rl_refresh;
     private ProgressBar mProgressBar;
     private WebView mWeb;

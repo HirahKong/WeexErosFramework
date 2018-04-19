@@ -8,13 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.activity.ResultActivity;
 import com.benmu.framework.adapter.router.RouterTracker;
 import com.benmu.framework.constant.Constant;
 import com.benmu.framework.manager.Manager;
 import com.benmu.framework.manager.ManagerFactory;
 import com.benmu.framework.model.NotificationBean;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.framework.utils.BaseCommonUtil;
 import com.benmu.framework.utils.ResourceUtil;
 import com.taobao.weex.WXSDKInstance;
@@ -44,8 +44,8 @@ public class PushManager extends Manager {
         if (isForeground) {
             //在前台 通知js
             Activity activity = RouterTracker.peekActivity();
-            if (activity instanceof AbstractWeexActivity) {
-                WXSDKInstance instance = ((AbstractWeexActivity) activity).getWXSDkInstance();
+            if (activity instanceof ISupportWeexActivity) {
+                WXSDKInstance instance = ((ISupportWeexActivity) activity).getWXSDkInstance();
                 GlobalEventManager.pushMessage(instance, getParams(bean, false));
             }
 

@@ -4,9 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.ContactsContract;
+import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.constant.Constant;
 import com.benmu.framework.manager.Manager;
 
@@ -28,8 +28,8 @@ public class CommunicationManager extends Manager {
     }
 
     public void contacts(final Context context) {
-        if (context instanceof AbstractWeexActivity) {
-            ((AbstractWeexActivity) context).startActivityForResult(new Intent(
+        if (context instanceof AppCompatActivity) {
+            ((AppCompatActivity) context).startActivityForResult(new Intent(
                     Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI), Constant.REQUEST_CODE.REQUEST_CODE_CONTRACT);
         }
     }

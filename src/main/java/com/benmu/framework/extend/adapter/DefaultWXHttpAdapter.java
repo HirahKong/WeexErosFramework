@@ -7,7 +7,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.benmu.framework.BMWXEnvironment;
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.adapter.router.RouterTracker;
 import com.benmu.framework.constant.Constant;
 import com.benmu.framework.manager.ManagerFactory;
@@ -16,6 +15,7 @@ import com.benmu.framework.manager.impl.ModalManager;
 import com.benmu.framework.manager.impl.PersistentManager;
 import com.benmu.framework.manager.impl.VersionManager;
 import com.benmu.framework.model.Md5MapperModel;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.framework.utils.BaseJsInjector;
 import com.benmu.framework.utils.DebugableUtil;
 import com.benmu.framework.utils.L;
@@ -41,9 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.Cache;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -186,8 +184,8 @@ public class DefaultWXHttpAdapter implements IWXHttpAdapter {
     private void hideError() {
         if (!DebugableUtil.isDebug()) return;
         Activity activity = RouterTracker.peekActivity();
-        if (activity != null && activity instanceof AbstractWeexActivity) {
-            AbstractWeexActivity abs = (AbstractWeexActivity) activity;
+        if (activity != null && activity instanceof ISupportWeexActivity) {
+            ISupportWeexActivity abs = (ISupportWeexActivity) activity;
             abs.hideError();
         }
     }
@@ -196,11 +194,11 @@ public class DefaultWXHttpAdapter implements IWXHttpAdapter {
     private void showError(final String message) {
         if (!DebugableUtil.isDebug()) return;
         final Activity activity = RouterTracker.peekActivity();
-        if (activity != null && activity instanceof AbstractWeexActivity) {
+        if (activity != null && activity instanceof ISupportWeexActivity) {
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    AbstractWeexActivity abs = (AbstractWeexActivity) activity;
+                    ISupportWeexActivity abs = (ISupportWeexActivity) activity;
                     abs.showError();
                     ModalManager.BmToast.toast(mContext, message,
                             Toast.LENGTH_SHORT);

@@ -6,7 +6,6 @@ import android.app.Application;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 
-import com.benmu.framework.activity.AbstractWeexActivity;
 import com.benmu.framework.adapter.router.RouterTracker;
 import com.benmu.framework.constant.Constant;
 import com.benmu.framework.debug.ws.DebuggerWebSocket;
@@ -14,6 +13,7 @@ import com.benmu.framework.manager.ManagerFactory;
 import com.benmu.framework.manager.impl.GlobalEventManager;
 import com.benmu.framework.manager.impl.LifecycleManager;
 import com.benmu.framework.model.PlatformConfigBean;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.framework.update.VersionChecker;
 import com.benmu.framework.utils.DebugableUtil;
 import com.taobao.weex.WXSDKInstance;
@@ -92,8 +92,8 @@ public class BMWXApplication extends Application {
             @Override
             public void onTaskSwitchToForeground() {
                 Activity activity = RouterTracker.peekActivity();
-                if (activity != null) {
-                    GlobalEventManager.appActive(((AbstractWeexActivity) activity)
+                if (activity != null&&activity instanceof ISupportWeexActivity) {
+                    GlobalEventManager.appActive(((ISupportWeexActivity) activity)
                             .getWXSDkInstance());
                 }
                 //app resume  try check verison
@@ -105,8 +105,8 @@ public class BMWXApplication extends Application {
             @Override
             public void onTaskSwitchToBackground() {
                 Activity activity = RouterTracker.peekActivity();
-                if (activity != null) {
-                    GlobalEventManager.appDeactive(((AbstractWeexActivity) activity)
+                if (activity != null&&activity instanceof ISupportWeexActivity) {
+                    GlobalEventManager.appDeactive(((ISupportWeexActivity) activity)
                             .getWXSDkInstance());
                 }
             }

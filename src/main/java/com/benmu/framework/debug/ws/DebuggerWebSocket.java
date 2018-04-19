@@ -10,8 +10,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.benmu.framework.BMWXEnvironment;
-import com.benmu.framework.activity.AbstractWeexActivity;
-import com.benmu.framework.activity.DebugActivity;
 import com.benmu.framework.adapter.router.RouterTracker;
 import com.benmu.framework.adapter.ws.DefaultWebSocketAdapter;
 import com.benmu.framework.adapter.ws.WSConfig;
@@ -19,9 +17,9 @@ import com.benmu.framework.constant.Constant;
 import com.benmu.framework.constant.WXConstant;
 import com.benmu.framework.manager.ManagerFactory;
 import com.benmu.framework.manager.impl.dispatcher.DispatchEventManager;
+import com.benmu.framework.support.ISupportWeexActivity;
 import com.benmu.framework.utils.DebugableUtil;
 import com.benmu.framework.utils.SharePreferenceUtil;
-import com.benmu.framework.utils.TextUtil;
 import com.squareup.otto.Subscribe;
 import com.taobao.weex.appfram.websocket.IWebSocketAdapter;
 import com.taobao.weex.appfram.websocket.WebSocketCloseCodes;
@@ -96,8 +94,8 @@ public class DebuggerWebSocket {
             if (!checkIsOpenHotRefresh()) return;
             if (Instruction.REFRESH.equals(data)) {
                 Activity peek = RouterTracker.peekActivity();
-                if (peek instanceof AbstractWeexActivity) {
-                    ((AbstractWeexActivity) peek).refresh();
+                if (peek instanceof ISupportWeexActivity) {
+                    ((ISupportWeexActivity) peek).refresh();
                 }
             }
 

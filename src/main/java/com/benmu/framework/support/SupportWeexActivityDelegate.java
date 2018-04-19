@@ -1,20 +1,4 @@
-package com.benmu.framework.activity;
-
-import com.benmu.framework.BMWXEnvironment;
-import com.benmu.framework.BuildConfig;
-import com.benmu.framework.constant.Constant;
-import com.benmu.framework.constant.WXConstant;
-import com.benmu.framework.manager.ManagerFactory;
-import com.benmu.framework.manager.impl.PermissionManager;
-import com.benmu.framework.manager.impl.dispatcher.DispatchEventManager;
-import com.benmu.framework.model.AxiosResultBean;
-import com.benmu.framework.model.UploadResultBean;
-import com.benmu.framework.utils.WXAnalyzerDelegate;
-import com.benmu.widget.view.DebugErrorDialog;
-import com.benmu.widget.view.loading.LoadingDialog;
-
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
+package com.benmu.framework.support;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -47,27 +31,41 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.benmu.framework.BMWXEnvironment;
+import com.benmu.framework.BuildConfig;
 import com.benmu.framework.R;
+import com.benmu.framework.activity.DebugActivity;
 import com.benmu.framework.adapter.router.RouterTracker;
+import com.benmu.framework.constant.Constant;
+import com.benmu.framework.constant.WXConstant;
+import com.benmu.framework.manager.ManagerFactory;
 import com.benmu.framework.manager.impl.GlobalEventManager;
 import com.benmu.framework.manager.impl.ImageManager;
+import com.benmu.framework.manager.impl.PermissionManager;
 import com.benmu.framework.manager.impl.PersistentManager;
+import com.benmu.framework.manager.impl.dispatcher.DispatchEventManager;
 import com.benmu.framework.manager.impl.status.StatusBarManager;
+import com.benmu.framework.model.AxiosResultBean;
 import com.benmu.framework.model.CameraResultBean;
 import com.benmu.framework.model.RouterModel;
 import com.benmu.framework.model.UploadImageBean;
+import com.benmu.framework.model.UploadResultBean;
 import com.benmu.framework.model.WeexEventBean;
 import com.benmu.framework.utils.DebugableUtil;
 import com.benmu.framework.utils.InsertEnvUtil;
+import com.benmu.framework.utils.WXAnalyzerDelegate;
 import com.benmu.framework.utils.WXCommonUtil;
 import com.benmu.widget.view.BMFloatingLayer;
 import com.benmu.widget.view.BMLoding;
 import com.benmu.widget.view.BaseToolBar;
+import com.benmu.widget.view.DebugErrorDialog;
+import com.benmu.widget.view.loading.LoadingDialog;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 import com.igexin.sdk.PushManager;
 import com.lzy.imagepicker.ImagePicker;
 import com.lzy.imagepicker.bean.ImageItem;
 import com.lzy.imagepicker.util.BitmapUtil;
-import com.taobao.weex.IWXRenderListener;
 import com.taobao.weex.RenderContainer;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKEngine;
@@ -88,23 +86,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Carry on 2017/8/16.
+ * Created by haorui on 2018/4/19.
+ * Des:
  */
 
-public class AbstractWeexActivity extends AppCompatActivity implements IWXRenderListener, Handler
-        .Callback,
-        RouterTracker.RouterTrackerListener {
-    protected RouterModel mRouterParam;
+public class SupportWeexActivityDelegate implements RouterTracker.RouterTrackerListener, Handler
+        .Callback{
+    public RouterModel mRouterParam;
     private WXSDKInstance mWXInstance;
-    protected ViewGroup mContainer;
+    public ViewGroup mContainer;
     private String mPageUrl;
     private static final String TAG = "AbstractWeexActivity";
     private String mPageName;
     private String mRouterType;
-    protected BMLoding mLoding;
+    public BMLoding mLoding;
     private BaseToolBar mNavigationBar;
     private BMFloatingLayer mDebugger;
-    protected Activity mAct;
     public String[] mDebugOptions = new String[]{"调试页面", "刷新", "扫一扫"};
     private RelativeLayout rl_error;
     private ViewGroup mRootView;
@@ -119,7 +116,15 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     private long mLastTime, mCurTime; // 调试按钮点击时间
     private ImagePicker imagePicker;
     private BroadcastReceiver mReloadReceiver;
-    protected WXAnalyzerDelegate mWxAnalyzerDelegate;
+    public WXAnalyzerDelegate mWxAnalyzerDelegate;
+
+    private final ISupportWeexActivity mSupport;
+    private final AppCompatActivity mActivity;
+
+    public SupportWeexActivityDelegate(ISupportWeexActivity support) {
+        this.mSupport = support;
+        this.mActivity = (AppCompatActivity) support;
+    }
 
     @Override
     public boolean handleMessage(Message msg) {
@@ -134,12 +139,9 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         return false;
     }
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mAct = this;
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         mRouterType = GlobalEventManager.TYPE_OPEN;
-        Intent data = getIntent();
+        Intent data = mActivity.getIntent();
         initRouterParams(data);
         initUrl(data);
         synRouterStack();
@@ -152,19 +154,18 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
                 renderPage();
             }
         };
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReloadReceiver, new
-                IntentFilter(WXSDKEngine.JS_FRAMEWORK_RELOAD));
-        mWxAnalyzerDelegate = new WXAnalyzerDelegate(this);
+        LocalBroadcastManager.getInstance(mActivity).registerReceiver(mReloadReceiver, new IntentFilter(WXSDKEngine.JS_FRAMEWORK_RELOAD));
+        mWxAnalyzerDelegate = new WXAnalyzerDelegate(mActivity);
         mWxAnalyzerDelegate.onCreate();
     }
 
     private void initPush() {
-        PushManager.getInstance().initialize(this.getApplicationContext());
+        PushManager.getInstance().initialize(mActivity.getApplicationContext());
     }
 
     private void initDebug() {
         if (!DebugableUtil.isDebug()) return;
-        mDebugger = new BMFloatingLayer(mAct);
+        mDebugger = new BMFloatingLayer(mActivity);
         mDebugger.setListener(new BMFloatingLayer.FloatingLayerListener() {
             @Override
             public void onClick() {
@@ -191,30 +192,30 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
 
             }
         });
-        mDebugger.show(mAct);
+        mDebugger.show(mActivity);
     }
 
     private void debugLayerClick() {
         android.support.v7.app.AlertDialog.Builder builder = new android.support.v7
-                .app.AlertDialog.Builder(mAct);
+                .app.AlertDialog.Builder(mActivity);
         builder.setItems(mDebugOptions, new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (which == 0) {
-                    Intent intent = new Intent(mAct, DebugActivity.class);
-                    startActivity(intent);
+                    Intent intent = new Intent(mActivity, DebugActivity.class);
+                    mActivity.startActivity(intent);
                 } else if (which == 1) {
                     refresh();
                 } else if (which == 2) {
                     DispatchEventManager dispatchEventManager = ManagerFactory
                             .getManagerService(DispatchEventManager.class);
                     WeexEventBean eventBean = new WeexEventBean();
-                    eventBean.setContext(mAct);
+                    eventBean.setContext(mActivity);
                     eventBean.setKey(WXConstant.WXEventCenter.EVENT_CAMERA);
                     dispatchEventManager.getBus().post(eventBean);
-//                    connectionDebugService(BMWXEnvironment.mPlatformConfig.getUrl()
-//                            .getDebugServer());
+                    //                    connectionDebugService(BMWXEnvironment.mPlatformConfig.getUrl()
+                    //                            .getDebugServer());
 
                 }
             }
@@ -226,23 +227,22 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         WXEnvironment.sDebugServerConnectable = BuildConfig.DEBUG;
         WXEnvironment.sRemoteDebugProxyUrl = url;
         WXSDKEngine.reload();
-        Toast.makeText(this, "devtool", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mActivity, "devtool", Toast.LENGTH_SHORT).show();
     }
 
-    @Override
     public void setContentView(@LayoutRes int layoutResID) {
-        mRootView = (ViewGroup) View.inflate(this, R.layout.layout_root, null);
+        mRootView = (ViewGroup) View.inflate(mActivity, R.layout.layout_root, null);
         RelativeLayout rl_root = (RelativeLayout) mRootView.findViewById(R.id.rl_root);
         rl_error = (RelativeLayout) mRootView.findViewById(R.id.rl_error);
         mNavigationBar = (BaseToolBar) mRootView.findViewById(R.id.base_navBar);
         ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams
                 .MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        View child = View.inflate(this, layoutResID, null);
+        View child = View.inflate(mActivity, layoutResID, null);
         rl_root.addView(child, params);
-        StatusBarManager.setHeaderBg(mRouterParam, this);
-        StatusBarManager.setStatusBarFontStyle(this, mRouterParam);
+        StatusBarManager.setHeaderBg(mRouterParam, mActivity);
+        StatusBarManager.setStatusBarFontStyle(mActivity, mRouterParam);
         setNavigationBar();
-        setContentView(mRootView);
+        mActivity.setContentView(mRootView);
     }
 
     public View getRootView() {
@@ -294,7 +294,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    protected void initRouterParams(Intent data) {
+    public void initRouterParams(Intent data) {
 
         Serializable serializableExtra = data.getSerializableExtra(Constant.ROUTERPARAMS);
         if (serializableExtra instanceof RouterModel) {
@@ -314,7 +314,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         rl_error.setVisibility(View.GONE);
     }
 
-    protected void initUrl(Intent data) {
+    public void initUrl(Intent data) {
         Uri pageUri = data.getData();
         if (pageUri == null) return;
         setPageUrl(pageUri.toString());
@@ -328,20 +328,20 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         return mRouterParam;
     }
 
-    protected void synRouterStack() {
+    public void synRouterStack() {
         if (mRouterParam != null) {
             if (!Constant.ACTIVITIES_ANIMATION.ANIMATION_PRESENT.equals(mRouterParam.type)) {
-                onAttach(this);
+                onAttach(mActivity);
             } else {
-                onAttach(this, getClass().getName());
+                onAttach(mActivity, getClass().getName());
             }
         } else {
-            onAttach(this);
+            onAttach(mActivity);
         }
     }
 
     public void refresh() {
-        runOnUiThread(new Runnable() {
+        mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 DispatchEventManager dispatchEventManager = ManagerFactory.getManagerService
@@ -358,9 +358,9 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
 
     //改造SVProgressHUD loadingView
     private void createLoadingView() {
-        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        LayoutInflater layoutInflater = LayoutInflater.from(mActivity);
         Log.d("SVProgressHUD", "context hasCode -> " + this.hashCode());
-        decorView = (ViewGroup) (this).getWindow().getDecorView().findViewById(android.R.id
+        decorView = (ViewGroup) (mActivity).getWindow().getDecorView().findViewById(android.R.id
                 .content);
         rootView = (ViewGroup) layoutInflater.inflate(com.benmu.R.layout
                 .layout_svprogresshud, null, false);
@@ -386,7 +386,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     public void showLoadingDialog(String msg) {
         if (loadingDialog == null) {
             loadingDialog = new LoadingDialog();
-            loadingDialog.createLoadingDialog(this, msg);
+            loadingDialog.createLoadingDialog(mActivity, msg);
         }
         loadingDialog.setTipText(msg);
         loadingDialog.show();
@@ -410,7 +410,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    protected void renderPage() {
+    public void renderPage() {
         if (TextUtils.isEmpty(mPageUrl)) {
             return;
         }
@@ -446,11 +446,11 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    protected void preRender() {
+    public void preRender() {
 
     }
 
-    protected void postRender() {
+    public void postRender() {
 
     }
 
@@ -458,19 +458,19 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         return mWXInstance;
     }
 
-    protected void createWXInstance() {
+    public void createWXInstance() {
         if (mWXInstance != null) {
             destroyWXInstance();
         }
-        RenderContainer renderContainer = new RenderContainer(this);
+        RenderContainer renderContainer = new RenderContainer(mActivity);
         mContainer.addView(renderContainer);
-        mWXInstance = new WXSDKInstance(this);
-        mWXInstance.registerRenderListener(this);
+        mWXInstance = new WXSDKInstance(mActivity);
+        mWXInstance.registerRenderListener(mSupport);
         mWXInstance.setRenderContainer(renderContainer);
 
     }
 
-    protected void destroyWXInstance() {
+    public void destroyWXInstance() {
         if (mWXInstance != null) {
             Intent intent = new Intent(WXConstant.WXEventCenter.EVENT_INSTANCE_DESTORY);
             intent.putExtra("data", mWXInstance.getInstanceId());
@@ -481,15 +481,12 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         }
     }
 
-    @Override
-    protected void onRestart() {
-        super.onRestart();
+
+    public void onRestart() {
         mRouterType = GlobalEventManager.TYPE_BACK;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    public void onResume() {
         if (mWXInstance != null) {
             mWXInstance.onActivityResume();
         }
@@ -501,16 +498,14 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
             mWxAnalyzerDelegate.onResume();
         }
 
-        MobclickAgent.onResume(this);
+        MobclickAgent.onResume(mActivity);
 
         ManagerFactory.getManagerService(DispatchEventManager.class).getBus().post
                 (new Intent(Constant.Action
                         .ACTION_AUTHLOGIN_CANCEL));
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+    public void onStart() {
         if (mWXInstance != null) {
             mWXInstance.onActivityStart();
         }
@@ -524,9 +519,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
+    public void onPause() {
         if (mWXInstance != null) {
             mWXInstance.onActivityPause();
         }
@@ -538,12 +531,10 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         if (mWxAnalyzerDelegate != null) {
             mWxAnalyzerDelegate.onPause();
         }
-        MobclickAgent.onPause(this);
+        MobclickAgent.onPause(mActivity);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
+    public void onStop() {
         if (mWXInstance != null) {
             mWXInstance.onActivityStop();
         }
@@ -557,10 +548,8 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        RouterTracker.autoRemoveActivity(this);
+    public void onDestroy() {
+        RouterTracker.autoRemoveActivity(mActivity);
         if (mWXInstance != null) {
             mWXInstance.onActivityDestroy();
         }
@@ -573,7 +562,6 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         }
     }
 
-    @Override
     public void onViewCreated(WXSDKInstance instance, View view) {
         View wrappedView = null;
         if (mWxAnalyzerDelegate != null) {
@@ -590,7 +578,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
             RenderContainer container = (RenderContainer) view;
             int childCount = container.getChildCount();
             if (childCount > 0) {
-                container.getChildAt(0).setBackgroundColor(ContextCompat.getColor(this, R.color
+                container.getChildAt(0).setBackgroundColor(ContextCompat.getColor(mActivity, R.color
                         .c_eff3f4));
             }
         }
@@ -598,7 +586,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         GlobalEventManager.onViewWillAppear(mWXInstance, mRouterType);
     }
 
-    @Override
+
     public void onRenderSuccess(WXSDKInstance instance, int width, int height) {
         //do some report
         GlobalEventManager.onViewDidAppear(mWXInstance, mRouterType);
@@ -608,17 +596,17 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         }
     }
 
-    @Override
+
     public void onRefreshSuccess(WXSDKInstance instance, int width, int height) {
 
     }
 
-    @Override
+
     public void onException(WXSDKInstance instance, String errCode, String msg) {
         if (!DebugableUtil.isDebug()) return;
         if (errorDialog == null) {
             errorDialog = new DebugErrorDialog();
-            errorDialog.createErrorDialog(this);
+            errorDialog.createErrorDialog(mActivity);
         }
         String errorMsg = "errCode -> " + errCode + " msg -> " + msg;
         errorDialog.setTextMsg(errorMsg);
@@ -631,46 +619,45 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    @Override
+
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return (mWxAnalyzerDelegate != null && mWxAnalyzerDelegate.onKeyUp(keyCode, event)) ||
-                super.onKeyUp(keyCode, event);
+        return (mWxAnalyzerDelegate != null && mWxAnalyzerDelegate.onKeyUp(keyCode, event));
     }
 
-    @Override
+
     public void onAttach(Activity activity) {
         RouterTracker.push(activity);
     }
 
-    @Override
+
     public void onAttach(Activity activity, String activityName) {
         RouterTracker.newInstancePush(activity, activityName);
     }
 
-    @Override
+
     public void onDetach(Activity activity, boolean force) {
-        if (activity == this) {
+        if (activity == mActivity) {
             if (force)
-                finish();
+                mActivity.finish();
             if (mRouterParam != null) {
                 String type = mRouterParam.type;
                 if (Constant.ACTIVITIES_ANIMATION.ANIMATION_PUSH.equals(type)) {
-                    overridePendingTransition(R.anim.view_stay, R.anim.right_out);
+                    mActivity.overridePendingTransition(R.anim.view_stay, R.anim.right_out);
                 } else if (Constant.ACTIVITIES_ANIMATION.ANIMATION_PRESENT.equals(type)) {
-                    overridePendingTransition(R.anim.view_stay, R.anim.bottom_out);
+                    mActivity.overridePendingTransition(R.anim.view_stay, R.anim.bottom_out);
                 } else if (Constant.ACTIVITIES_ANIMATION.ANIMATION_TRANSLATION.equals(type)) {
-                    overridePendingTransition(R.anim.view_stay, R.anim.left_out);
+                    mActivity.overridePendingTransition(R.anim.view_stay, R.anim.left_out);
                 }
             }
         }
     }
 
-    @Override
+
     public void onDetach(Activity activity, String activityName) {
 
     }
 
-    @Override
+
     public void onBackPressed() {
         if (mRouterParam != null && mRouterParam.isRunBackCallback) {
             if (mRouterParam.backCallback != null) {
@@ -698,12 +685,12 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (result != null) {
             if (result.getContents() == null) {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
+                Toast.makeText(mActivity, "Cancelled", Toast.LENGTH_LONG).show();
             } else {
                 handleDecodeInternally(result.getContents());
             }
@@ -711,13 +698,13 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         /**
          * 读取联系人返回
          */
-        if (resultCode == RESULT_OK && requestCode == Constant.REQUEST_CODE.REQUEST_CODE_CONTRACT) {
+        if (resultCode == mActivity.RESULT_OK && requestCode == Constant.REQUEST_CODE.REQUEST_CODE_CONTRACT) {
             readContractResult(data);
         }
         /**
          * 照片拍摄返回
          */
-        if (resultCode == RESULT_OK && requestCode == ImagePicker.REQUEST_CODE_TAKE) {
+        if (resultCode == mActivity.RESULT_OK && requestCode == ImagePicker.REQUEST_CODE_TAKE) {
             cameraResult();
             return;
         }
@@ -746,16 +733,15 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
                 }
                 break;
         }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void readContractResult(Intent data) {
         String username, usernumber = "";
-        ContentResolver reContentResolverol = getContentResolver();
+        ContentResolver reContentResolverol = mActivity.getContentResolver();
         //URI,每个ContentProvider定义一个唯一的公开的URI,用于指定到它的数据集
         Uri contactData = data.getData();
         //查询就是输入URI等参数,其中URI是必须的,其他是可选的,如果系统能找到URI对应的ContentProvider将返回一个Cursor对象.
-        Cursor cursor = managedQuery(contactData, null, null, null, null);
+        Cursor cursor = mActivity.managedQuery(contactData, null, null, null, null);
         cursor.moveToFirst();
         //获得DATA表中的名字
         username = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
@@ -815,14 +801,14 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
         UploadImageBean bean = ManagerFactory.getManagerService
                 (PersistentManager.class).getCacheData
                 (Constant.ImageConstants.UPLOAD_IMAGE_BEAN, UploadImageBean.class);
-        imageManager.UpMultipleImageData(this, items, bean);
+        imageManager.UpMultipleImageData(mActivity, items, bean);
     }
 
     /**
      * 照片拍摄完成读取结果
      */
     private void cameraResult() {
-        ImagePicker.galleryAddPic(this, this.imagePicker.getTakeImageFile());
+        ImagePicker.galleryAddPic(mActivity, this.imagePicker.getTakeImageFile());
         String path = this.imagePicker.getTakeImageFile().getAbsolutePath();
         int degree = BitmapUtil.getBitmapDegree(path);
         if (degree != 0) {
@@ -852,13 +838,12 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    @Override
+
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         PermissionManager permissionManager = ManagerFactory.getManagerService(PermissionManager
                 .class);
         permissionManager.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
     }
 
@@ -872,21 +857,21 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
                     WXEnvironment.sDynamicUrl = uri.getQueryParameter("bundle");
                     String tip = WXEnvironment.sDynamicMode ? "Has switched to Dynamic Mode" : "Has " +
                             "switched to Normal Mode";
-                    Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
-                    finish();
+                    Toast.makeText(mActivity, tip, Toast.LENGTH_SHORT).show();
+                    mActivity.finish();
                     return;
                 } else if (uri.getQueryParameterNames().contains("_wx_devtool")) {
                     WXEnvironment.sRemoteDebugProxyUrl = uri.getQueryParameter("_wx_devtool");
                     WXEnvironment.sDebugServerConnectable = true;
                     WXSDKEngine.reload();
-                    Toast.makeText(this, "devtool", Toast.LENGTH_SHORT).show();
-//                connectionDebugService(uri.getQueryParameter("_wx_devtool"));
+                    Toast.makeText(mActivity, "devtool", Toast.LENGTH_SHORT).show();
+                    //                connectionDebugService(uri.getQueryParameter("_wx_devtool"));
                     return;
                 } else if (code.contains("_wx_debug")) {
                     uri = Uri.parse(code);
                     String debug_url = uri.getQueryParameter("_wx_debug");
-//                WXSDKEngine.switchDebugModel(true, debug_url);
-                    finish();
+                    //                WXSDKEngine.switchDebugModel(true, debug_url);
+                    mActivity.finish();
                 } else {
                     postBusScanCode(code);
                 }
@@ -910,7 +895,7 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
     }
 
 
-    @Override
+
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
             if (isHomePage() && BMWXEnvironment.mPlatformConfig.isAndroidIsListenHomeBack()) { //如果是首页
@@ -918,13 +903,15 @@ public class AbstractWeexActivity extends AppCompatActivity implements IWXRender
                 return true;
             }
         }
-        return super.onKeyDown(keyCode, event);
+        return false;
     }
 
     private boolean isHomePage() {
-        String homePage = BMWXEnvironment.mPlatformConfig.getPage().getHomePage(this);
+        String homePage = BMWXEnvironment.mPlatformConfig.getPage().getHomePage(mActivity);
         homePage = BMWXEnvironment.mPlatformConfig.getUrl().getJsServer() +
                 "/dist/js" + homePage;
         return homePage.equals(this.mPageUrl);
     }
+
+
 }
